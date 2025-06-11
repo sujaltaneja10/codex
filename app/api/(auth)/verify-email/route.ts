@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   const { user } = dbUser;
 
   // Verify email and delete token
-  prisma.$transaction([
+  await prisma.$transaction([
     prisma.user.update({
       where: { id: user.id },
       data: { emailVerified: new Date() },

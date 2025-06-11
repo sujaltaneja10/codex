@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const hashedToken = hashToken(refreshToken);
 
     try {
-      prisma.refreshToken.delete({
+      await prisma.refreshToken.delete({
         where: { hashedToken },
       });
     } catch (error) {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   );
 
   response.cookies.set('access-token', '', { maxAge: 0, path: '/' });
-  response.cookies.set('refresh-token-token', '', { maxAge: 0, path: '/' });
+  response.cookies.set('refresh-token', '', { maxAge: 0, path: '/' });
 
   return response;
 }

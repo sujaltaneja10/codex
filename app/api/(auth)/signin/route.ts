@@ -68,13 +68,22 @@ export async function POST(request: NextRequest) {
 
   const refreshToken = await generateRefreshToken({ userId: user.id });
 
-  await prisma.refreshToken.create({
-    data: {
-      userId: user.id,
-      hashedToken: hashToken(refreshToken),
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    },
-  });
+  try {
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        hashedToken: hashToken(refreshToken),
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: 'Email verified. Please manually log in.',
+      },
+      { status: 500 }
+    );
+  }
 
   // Log in the user
   const response = NextResponse.json({
