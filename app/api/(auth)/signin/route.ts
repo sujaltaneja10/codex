@@ -7,7 +7,6 @@ import {
   generateRefreshToken,
   hashToken,
 } from '@/lib/auth';
-import sendVerificationEmail from '@/lib/email';
 import { generateEmailVerificationUrl } from '@/lib/token';
 
 export async function POST(request: NextRequest) {
@@ -69,7 +68,7 @@ export async function POST(request: NextRequest) {
 
   const refreshToken = await generateRefreshToken({ userId: user.id });
 
-  await prisma?.refreshToken.create({
+  await prisma.refreshToken.create({
     data: {
       userId: user.id,
       hashedToken: hashToken(refreshToken),

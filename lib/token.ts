@@ -12,14 +12,20 @@ export async function generateEmailVerificationUrl({
   email: string;
   userId: string;
 }) {
+  if (!process.env.NEXT_PUBLIC_APP_URL) {
+    throw new Error(
+      'NEXT_PUBLIC_APP_URL env var not set – cannot build verification URL'
+    );
+  }
+
   // Create verification token
   const verificationToken = randomUUID();
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/verify-email?token=${verificationToken}`;
+  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
 
   await prisma.verificationToken.upsert({
     where: {
-      userEmail: email,
+      userId,
     },
     update: {
       hashedToken: hashToken(verificationToken),

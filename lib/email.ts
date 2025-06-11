@@ -32,8 +32,6 @@ export default async function sendVerificationEmail(
       react: VerificationEmail({ name, verificationUrl }),
     });
 
-    console.log('sent email');
-
     if (error) throw error;
 
     return data;

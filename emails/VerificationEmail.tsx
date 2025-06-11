@@ -80,7 +80,7 @@ const paragraph = {
 
 const button = {
   backgroundColor: '#000000',
-  borderRadius: '3px',
+  borderRadius: '6px',
   color: '#fff',
   fontSize: '16px',
   textDecoration: 'none',
