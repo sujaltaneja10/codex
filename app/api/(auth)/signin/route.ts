@@ -7,6 +7,8 @@ import {
   generateRefreshToken,
   hashToken,
 } from '@/lib/auth';
+import sendVerificationEmail from '@/lib/email';
+import { generateEmailVerificationUrl } from '@/lib/token';
 
 export async function POST(request: NextRequest) {
   const body: SignInPayload = await request.json();
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
 
   const isEmail = identifier.includes('@');
 
-  const user = await prisma?.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: isEmail
       ? { email: identifier.toLowerCase() }
       : { username: identifier.toLowerCase() },
@@ -44,18 +46,24 @@ export async function POST(request: NextRequest) {
   if (!matchPassword) {
     return NextResponse.json(
       {
-        error: 'Incorrect password',
+        error: 'Invalid username or password',
       },
       { status: 401 }
     );
   }
 
-  //   if (!user.emailVerified) {
-  //     return NextResponse.json(
-  //       { error: 'Please verify your email before logging in.' },
-  //       { status: 403 }
-  //     );
-  //   }
+  if (!user.emailVerified) {
+    await generateEmailVerificationUrl({
+      name: user.name,
+      email: user.email,
+      userId: user.id,
+    });
+
+    return NextResponse.json(
+      { message: 'Please check your email to verify your account and log in.' },
+      { status: 202 }
+    );
+  }
 
   const accessToken = await generateAccessToken({ userId: user.id });
 

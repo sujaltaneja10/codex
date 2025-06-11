@@ -11,7 +11,7 @@ model User {
   id                   String     @id  @default(cuid())
   email                String     @unique
   username             String     @unique
-  name                 String?  
+  name                 String
   password             String?
   emailVerified        DateTime?
 
@@ -24,7 +24,7 @@ model User {
 
 model VerificationToken {
   id            String    @id @default(cuid())
-  userEmail     String
+  userEmail     String    @unique
   hashedToken   String    @unique
   expires       DateTime
 

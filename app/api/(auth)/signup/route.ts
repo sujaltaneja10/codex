@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { signUpSchema, SignUpPayload } from '@/lib/validators/auth';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { randomUUID } from 'crypto';
-import { hashToken } from '@/lib/auth';
-import sendVerificationEmail from '@/lib/email';
 import { capitalizeWords } from '@/lib/utils';
+import { generateEmailVerificationUrl } from '@/lib/token';
 
 export async function POST(request: NextRequest) {
   const body: SignUpPayload = await request.json();
@@ -30,32 +28,20 @@ export async function POST(request: NextRequest) {
 
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  // Create verification token
-  const verificationToken = randomUUID();
-  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
   const capitalizedName = capitalizeWords(name);
 
+  let userId: string;
   try {
-    await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          name: capitalizedName,
-          username,
-          email,
-          password: hashedPassword,
-        },
-      });
-
-      await tx.verificationToken.create({
-        data: {
-          userEmail: email,
-          hashedToken: hashToken(verificationToken),
-          expires,
-          userId: user.id,
-        },
-      });
+    const user = await prisma.user.create({
+      data: {
+        name: capitalizedName,
+        username,
+        email,
+        password: hashedPassword,
+      },
     });
+
+    userId = user.id;
   } catch (error: any) {
     if (error.code == 'P2002') {
       const target = error.meta?.target?.[0];
@@ -68,21 +54,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/verify-email?token=${verificationToken}`;
-
-    await sendVerificationEmail(capitalizedName, email, verificationUrl);
-  } catch (emailError) {
-    console.error(
-      'Failed to send verification email for user:',
+    await generateEmailVerificationUrl({
+      name: capitalizedName,
       email,
-      emailError
-    );
+      userId,
+    });
+  } catch (error) {
     return NextResponse.json(
       {
         message:
           'Signup successful. Please try to logging in to resend email for verification.',
       },
-      { status: 502 }
+      { status: 500 }
     );
   }
 

@@ -34,7 +34,10 @@ export const signUpSchema = z.object({
 export type SignUpPayload = z.infer<typeof signUpSchema>;
 
 export const signInSchema = z.object({
-  identifier: z.string({ message: 'Username/email must be a string' }).trim(),
+  identifier: z
+    .string({ message: 'Username/email must be a string' })
+    .trim()
+    .toLowerCase(),
   password: z.string({ message: 'Password must be a string' }),
 });
 

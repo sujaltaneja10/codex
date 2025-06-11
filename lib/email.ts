@@ -32,11 +32,12 @@ export default async function sendVerificationEmail(
       react: VerificationEmail({ name, verificationUrl }),
     });
 
+    console.log('sent email');
+
     if (error) throw error;
 
     return data;
   } catch (error) {
-    console.error('Failed to send verification email:', error);
     throw new Error('Failed to send verification email.');
   }
 }
