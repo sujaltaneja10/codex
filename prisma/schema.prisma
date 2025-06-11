@@ -8,22 +8,35 @@ datasource db {
 }
 
 model User {
-  id                Int        @id  @default(autoincrement())
-  email             String     @unique
-  username          String     @unique
-  name              String?  
-  password          String?
-  emailVerified     Boolean    @default(false)
+  id                   String     @id  @default(cuid())
+  email                String     @unique
+  username             String     @unique
+  name                 String?  
+  password             String?
+  emailVerified        DateTime?
 
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  verificationTokens   VerificationToken[]
+  refreshTokens        RefreshToken[] 
 }
 
 model VerificationToken {
-  id            Int       @id @default(autoincrement())
+  id            String    @id @default(cuid())
   userEmail     String
   hashedToken   String    @unique
   expires       DateTime
 
-  @@unique([userEmail, hashedToken])
+  userId        String 
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id           String     @id  @default(cuid())
+  hashedToken  String     @unique
+  expires      DateTime
+
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

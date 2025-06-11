@@ -18,28 +18,41 @@ interface VerificationEmailProps {
 export const VerificationEmail = ({
   name,
   verificationUrl,
-}: VerificationEmailProps) => (
-  <Html>
-    <Head />
-    <Preview>Verify your email to complete your Codex registration</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={heading}>Welcome to Codex, {name}!</Heading>
-        <Text style={paragraph}>
-          We're excited to have you. Please click the button below to verify
-          your email address and activate your account.
-        </Text>
-        <Button style={button} href={verificationUrl}>
-          Verify Your Email
-        </Button>
-        <Text style={paragraph}>
-          If you did not sign up for this account, you can safely ignore this
-          email.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
-);
+}: VerificationEmailProps) => {
+  if (!process.env.PROJECT_NAME) {
+    throw new Error('PROJECT_NAME environment variable is not defined');
+  }
+
+  return (
+    <Html>
+      <Head />
+      <Preview>
+        Verify your email to complete your {process.env.PROJECT_NAME}{' '}
+        registration
+      </Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Heading style={heading}>
+            Welcome to {process.env.PROJECT_NAME}, {name}!
+          </Heading>
+          <Text style={paragraph}>
+            We're excited to have you. Please click the button below to verify
+            your email address and activate your account.
+          </Text>
+          <Button style={button} href={verificationUrl}>
+            Verify Your Email
+          </Button>
+          <Text style={paragraph}>
+            If you did not sign up for this account, you can safely ignore this
+            email.
+          </Text>
+        </Container>
+      </Body>
+    </Html>
+  );
+};
+
+// STYLES FOR EMAIL
 
 const main = {
   backgroundColor: '#f6f9fc',

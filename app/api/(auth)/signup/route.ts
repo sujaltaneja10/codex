@@ -5,34 +5,56 @@ import { prisma } from '@/lib/prisma';
 import { randomUUID } from 'crypto';
 import { hashToken } from '@/lib/auth';
 import sendVerificationEmail from '@/lib/email';
+import { capitalizeWords } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
-  // Get body from user
   const body: SignUpPayload = await request.json();
 
-  // Add zod validation
   const validation = signUpSchema.safeParse(body);
 
   if (!validation.success) {
     return NextResponse.json(
-      { error: 'Invalid input', details: validation.error.flatten() },
+      { error: validation.error?.issues[0].message },
       { status: 400 }
     );
   }
 
-  // Get user details
   const { name, username, email, password } = validation.data;
 
-  const saltRounds = process.env.BCRYPT_ROUNDS
-    ? parseInt(process.env.BCRYPT_ROUNDS)
+  const saltRoundsEnv = process.env.BCRYPT_ROUNDS;
+  const saltRounds = saltRoundsEnv
+    ? isNaN(parseInt(saltRoundsEnv))
+      ? 10
+      : parseInt(saltRoundsEnv)
     : 10;
 
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  // Create new user and return error if it violates the unique constraint
+  // Create verification token
+  const verificationToken = randomUUID();
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  const capitalizedName = capitalizeWords(name);
+
   try {
-    await prisma?.user.create({
-      data: { name, username, email, password: hashedPassword },
+    await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name: capitalizedName,
+          username,
+          email,
+          password: hashedPassword,
+        },
+      });
+
+      await tx.verificationToken.create({
+        data: {
+          userEmail: email,
+          hashedToken: hashToken(verificationToken),
+          expires,
+          userId: user.id,
+        },
+      });
     });
   } catch (error: any) {
     if (error.code == 'P2002') {
@@ -45,19 +67,24 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  // Send verification email to the user
-  const verificationToken = randomUUID();
-  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  try {
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/verify-email?token=${verificationToken}`;
 
-  await prisma.verificationToken.create({
-    data: {
-      userEmail: email,
-      hashedToken: hashToken(verificationToken),
-      expires,
-    },
-  });
-
-  await sendVerificationEmail(name, email, verificationToken);
+    await sendVerificationEmail(capitalizedName, email, verificationUrl);
+  } catch (emailError) {
+    console.error(
+      'Failed to send verification email for user:',
+      email,
+      emailError
+    );
+    return NextResponse.json(
+      {
+        message:
+          'Signup successful. Please try to logging in to resend email for verification.',
+      },
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json(
     {
