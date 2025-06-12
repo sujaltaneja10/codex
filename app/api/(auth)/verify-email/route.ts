@@ -5,16 +5,16 @@ import {
 } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { config } from '@/lib/config';
 
 export async function GET(request: NextRequest) {
-  if (!process.env.NEXT_PUBLIC_APP_URL) {
-    throw new Error('NEXT_PUBLIC_APP_URL environment variable not available');
-  }
-
   const token = request.nextUrl.searchParams.get('token');
 
   if (!token) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Invalid or expired token' },
+      { status: 400 }
+    );
   }
 
   const hashedToken = hashToken(token);
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   if (!dbUser || new Date() > dbUser.expires) {
     return NextResponse.json(
-      { error: 'Invalid or expired verification token' },
+      { error: 'Invalid or expired token' },
       { status: 400 }
     );
   }
@@ -58,12 +58,12 @@ export async function GET(request: NextRequest) {
   });
 
   const response = NextResponse.redirect(
-    new URL('/', process.env.NEXT_PUBLIC_APP_URL)
+    new URL('/', config.NEXT_PUBLIC_APP_URL)
   );
 
   response.cookies.set('access-token', accessToken, {
     httpOnly: true, // for XSS
-    secure: process.env.NODE_ENV === 'production', // HTTPS on production
+    secure: config.NODE_ENV === 'production', // HTTPS on production
     sameSite: 'strict', // CSRF
     maxAge: 60 * 15, // 15 min
     path: '/',
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 
   response.cookies.set('refresh-token', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: config.NODE_ENV === 'production',
     sameSite: 'strict',
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // better browser support
     path: '/',

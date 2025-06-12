@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { capitalizeWords } from '@/lib/utils';
 import { generateEmailVerificationUrl } from '@/lib/token';
+import { config } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   const body: SignUpPayload = await request.json();
@@ -19,12 +20,7 @@ export async function POST(request: NextRequest) {
 
   const { name, username, email, password } = validation.data;
 
-  const saltRoundsEnv = process.env.BCRYPT_ROUNDS;
-  const saltRounds = saltRoundsEnv
-    ? isNaN(parseInt(saltRoundsEnv))
-      ? 10
-      : parseInt(saltRoundsEnv)
-    : 10;
+  const saltRounds = config.BCRYPT_ROUNDS;
 
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 

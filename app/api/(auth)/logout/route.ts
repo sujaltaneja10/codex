@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const hashedToken = hashToken(refreshToken);
 
     try {
-      await prisma.refreshToken.delete({
+      await prisma.refreshToken.deleteMany({
         where: { hashedToken },
       });
     } catch (error) {

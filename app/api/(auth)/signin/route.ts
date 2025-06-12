@@ -8,6 +8,8 @@ import {
   hashToken,
 } from '@/lib/auth';
 import { generateEmailVerificationUrl } from '@/lib/token';
+import { Prisma } from '@prisma/client';
+import { config } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   const body: SignInPayload = await request.json();
@@ -77,12 +79,18 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: 'Email verified. Please manually log in.',
-      },
-      { status: 500 }
-    );
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      // Token already exists – proceed without blocking login.
+    } else {
+      console.error('Failed to persist refresh token', error);
+      return NextResponse.json(
+        { error: 'Unexpected sign-in error. Please try again.' },
+        { status: 500 }
+      );
+    }
   }
 
   // Log in the user
@@ -92,7 +100,7 @@ export async function POST(request: NextRequest) {
 
   response.cookies.set('access-token', accessToken, {
     httpOnly: true, // for XSS
-    secure: process.env.NODE_ENV === 'production', // HTTPS on production
+    secure: config.NODE_ENV === 'production', // HTTPS on production
     sameSite: 'strict', // CSRF
     maxAge: 60 * 15, // 15 min
     path: '/',
@@ -100,7 +108,7 @@ export async function POST(request: NextRequest) {
 
   response.cookies.set('refresh-token', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: config.NODE_ENV === 'production',
     sameSite: 'strict',
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // better browser support
     path: '/',

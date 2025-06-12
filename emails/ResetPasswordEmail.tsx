@@ -11,33 +11,32 @@ import {
 import * as React from 'react';
 import { config } from '@/lib/config';
 
-interface VerificationEmailProps {
+interface ResetPasswordEmailProps {
   name: string;
   url: string;
 }
 
-export const VerificationEmail = ({ name, url }: VerificationEmailProps) => {
+export const ResetPasswordEmail = ({ name, url }: ResetPasswordEmailProps) => {
   return (
     <Html>
       <Head />
       <Preview>
-        Verify your email to complete your {config.PROJECT_NAME!} registration
+        Click on the link to reset your {config.PROJECT_NAME} password
       </Preview>
       <Body style={main}>
         <Container style={container}>
           <Heading style={heading}>
-            Welcome to {config.PROJECT_NAME}, {name}!
+            Welcome back to {config.PROJECT_NAME}, {name}!
           </Heading>
           <Text style={paragraph}>
-            We're excited to have you. Please click the button below to verify
-            your email address and activate your account.
+            We're excited to have you back. Please click the button below to
+            reset your password and gain access back to your account.
           </Text>
           <Button style={button} href={url}>
-            Verify Your Email
+            Forgot Password
           </Button>
           <Text style={paragraph}>
-            If you did not sign up for this account, you can safely ignore this
-            email.
+            If you did not send this, you can safely ignore this email.
           </Text>
         </Container>
       </Body>

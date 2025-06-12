@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+const passwordField = z
+  .string()
+  .min(8, { message: 'Password must be at least 8 characters long' })
+  .max(128, { message: 'Password must be maximum 128 characters long' })
+  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message:
+      'Password must contain at least one lowercase letter, one uppercase letter, and one number',
+  });
+
 export const signUpSchema = z.object({
   name: z
     .string()
@@ -21,14 +30,7 @@ export const signUpSchema = z.object({
       message:
         'Username can only contain lowercase letters, numbers, and underscores.',
     }),
-  password: z
-    .string()
-    .min(8, { message: 'Password must be at least 8 characters long' })
-    .max(128, { message: 'Password must be maximum 128 characters long' })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-      message:
-        'Password must contain at least one lowercase letter, one uppercase letter, and one number',
-    }),
+  password: passwordField,
 });
 
 export type SignUpPayload = z.infer<typeof signUpSchema>;
@@ -36,9 +38,20 @@ export type SignUpPayload = z.infer<typeof signUpSchema>;
 export const signInSchema = z.object({
   identifier: z
     .string({ message: 'Username/email must be a string' })
+    .min(3, { message: 'Username/email must be atleast 3 characters long' })
     .trim()
     .toLowerCase(),
-  password: z.string({ message: 'Password must be a string' }),
+  password: passwordField,
 });
 
 export type SignInPayload = z.infer<typeof signInSchema>;
+
+export const forgotPasswordSchema = signInSchema.pick({ identifier: true });
+
+export type ForgotPasswordPayload = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  password: passwordField,
+});
+
+export type ResetPasswordPayload = z.infer<typeof resetPasswordSchema>;
