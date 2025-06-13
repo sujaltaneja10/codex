@@ -1,8 +1,9 @@
 import { hashToken } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withError } from '@/lib/api/middleware';
 
-export async function POST(request: NextRequest) {
+async function logoutHandler(request: NextRequest) {
   const refreshToken = request.cookies.get('refresh-token')?.value;
 
   if (refreshToken) {
@@ -30,3 +31,5 @@ export async function POST(request: NextRequest) {
 
   return response;
 }
+
+export const POST = withError(logoutHandler);

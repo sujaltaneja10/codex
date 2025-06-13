@@ -5,8 +5,9 @@ import {
 } from '@/lib/validators/auth';
 import { prisma } from '@/lib/prisma';
 import { generateResetPasswordUrl } from '@/lib/token';
+import { withError } from '@/lib/api/middleware';
 
-export async function POST(request: NextRequest) {
+async function forgotPasswordHandler(request: NextRequest) {
   const body: ForgotPasswordPayload = await request.json();
 
   const validation = forgotPasswordSchema.safeParse(body);
@@ -50,3 +51,5 @@ export async function POST(request: NextRequest) {
     { status: 200 }
   );
 }
+
+export const POST = withError(forgotPasswordHandler);

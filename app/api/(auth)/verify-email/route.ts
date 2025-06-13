@@ -6,8 +6,9 @@ import {
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { config } from '@/lib/config';
+import { withError } from '@/lib/api/middleware';
 
-export async function GET(request: NextRequest) {
+async function verifyEmailHandler(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token');
 
   if (!token) {
@@ -79,3 +80,5 @@ export async function GET(request: NextRequest) {
 
   return response;
 }
+
+export const GET = withError(verifyEmailHandler);

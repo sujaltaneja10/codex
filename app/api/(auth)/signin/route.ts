@@ -10,8 +10,9 @@ import {
 import { generateEmailVerificationUrl } from '@/lib/token';
 import { Prisma } from '@prisma/client';
 import { config } from '@/lib/config';
+import { withError } from '@/lib/api/middleware';
 
-export async function POST(request: NextRequest) {
+async function signinHandler(request: NextRequest) {
   const body: SignInPayload = await request.json();
 
   const validation = signInSchema.safeParse(body);
@@ -116,3 +117,5 @@ export async function POST(request: NextRequest) {
 
   return response;
 }
+
+export const POST = withError(signinHandler);

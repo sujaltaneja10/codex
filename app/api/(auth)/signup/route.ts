@@ -5,8 +5,10 @@ import { prisma } from '@/lib/prisma';
 import { capitalizeWords } from '@/lib/utils';
 import { generateEmailVerificationUrl } from '@/lib/token';
 import { config } from '@/lib/config';
+import { Prisma } from '@prisma/client';
+import { withError } from '@/lib/api/middleware';
 
-export async function POST(request: NextRequest) {
+async function signupHandler(request: NextRequest) {
   const body: SignUpPayload = await request.json();
 
   const validation = signUpSchema.safeParse(body);
@@ -39,8 +41,11 @@ export async function POST(request: NextRequest) {
 
     userId = user.id;
   } catch (error: any) {
-    if (error.code == 'P2002') {
-      const target = error.meta?.target?.[0];
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      const target = (error.meta?.target as string[])?.[0] || 'details';
       return NextResponse.json(
         { error: `User with this ${target} already exists` },
         { status: 409 }
@@ -73,3 +78,5 @@ export async function POST(request: NextRequest) {
     { status: 202 }
   );
 }
+
+export const POST = withError(signupHandler);

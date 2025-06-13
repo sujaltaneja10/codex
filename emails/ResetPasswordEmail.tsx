@@ -33,7 +33,7 @@ export const ResetPasswordEmail = ({ name, url }: ResetPasswordEmailProps) => {
             reset your password and gain access back to your account.
           </Text>
           <Button style={button} href={url}>
-            Forgot Password
+            Reset Password
           </Button>
           <Text style={paragraph}>
             If you did not send this, you can safely ignore this email.

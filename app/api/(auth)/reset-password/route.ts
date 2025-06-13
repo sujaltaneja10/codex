@@ -7,8 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashToken } from '@/lib/auth';
 import { config } from '@/lib/config';
+import { withError } from '@/lib/api/middleware';
 
-export async function POST(request: NextRequest) {
+async function resetPasswordHandler(request: NextRequest) {
   const givenToken = request.nextUrl.searchParams.get('token');
 
   if (!givenToken) {
@@ -72,3 +73,5 @@ export async function POST(request: NextRequest) {
     message: 'Password reset. Please log in.',
   });
 }
+
+export const POST = withError(resetPasswordHandler);
