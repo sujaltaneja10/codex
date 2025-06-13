@@ -1,4 +1,11 @@
 import { z } from 'zod';
+import sanitizeHtml from 'sanitize-html';
+
+const sanitize = (text: string) =>
+  sanitizeHtml(text, {
+    allowedTags: [],
+    allowedAttributes: {},
+  });
 
 const passwordField = z
   .string()
@@ -14,7 +21,8 @@ export const signUpSchema = z.object({
     .string()
     .min(2, { message: 'Name should be atleast 2 characters long' })
     .max(15, { message: 'Name must be maximum 15 characters long' })
-    .trim(),
+    .trim()
+    .transform(sanitize),
   email: z
     .string()
     .email({ message: 'Email must be in valid format' })
@@ -29,7 +37,8 @@ export const signUpSchema = z.object({
     .regex(/^[a-z0-9_]+$/, {
       message:
         'Username can only contain lowercase letters, numbers, and underscores.',
-    }),
+    })
+    .transform(sanitize),
   password: passwordField,
 });
 
