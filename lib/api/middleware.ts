@@ -1,6 +1,8 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodError } from 'zod';
+import { verifyJwt } from '../auth';
+import { prisma } from '@/lib/prisma';
 
 type RouteHandler = (req: NextRequest, ...args: any[]) => Promise<NextResponse>;
 
@@ -40,4 +42,52 @@ export function withError(handler: RouteHandler) {
   };
 }
 
-export function withAuth(handler: RouteHandler) {}
+export type AuthenticatedUser = Omit<User, 'password'>;
+
+type AuthenticatedRouteHandler = (
+  req: NextRequest,
+  context: { user: AuthenticatedUser }
+) => Promise<NextResponse>;
+
+export function withAuth(handler: AuthenticatedRouteHandler) {
+  return async function (request: NextRequest) {
+    // Get access token from cookies
+    const token = request.cookies.get('access-token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+      const decodedPayload = await verifyJwt(token);
+
+      const { userId } = decodedPayload;
+
+      if (!userId || typeof userId !== 'string') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      let user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          name: true,
+          id: true,
+          email: true,
+          username: true,
+          emailVerified: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      return await handler(request, { user });
+    } catch (error) {
+      console.error('Authentication error in withAuth HOF:', { error });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  };
+}
