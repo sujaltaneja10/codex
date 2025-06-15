@@ -29,7 +29,7 @@ export async function verifyJwt(token: string) {
 export function generateAccessToken(payload: {
   userId: string;
 }): Promise<string> {
-  const secret = getJwtSecretKey(config.JWT_ACCESS_SECRET!);
+  const secret = getJwtSecretKey(config.JWT_ACCESS_SECRET);
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(nanoid())
@@ -43,7 +43,7 @@ export function generateAccessToken(payload: {
 export function generateRefreshToken(payload: {
   userId: string;
 }): Promise<string> {
-  const secret = getJwtSecretKey(config.JWT_REFRESH_SECRET!);
+  const secret = getJwtSecretKey(config.JWT_REFRESH_SECRET);
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(nanoid())

@@ -35,6 +35,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z
     .string()
     .url({ message: 'NEXT_PUBLIC_APP_URL must be a valid URL' }),
+
+  CRON_SECRET: z.string().min(32, {
+    message: 'CRON_SECRET must be at least 32 characters',
+  }),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
