@@ -21,8 +21,7 @@ export const signUpSchema = z.object({
     .string()
     .min(2, { message: 'Name should be atleast 2 characters long' })
     .max(15, { message: 'Name must be maximum 15 characters long' })
-    .trim()
-    .transform(sanitize),
+    .trim(),
   email: z
     .string()
     .email({ message: 'Email must be in valid format' })
@@ -37,8 +36,7 @@ export const signUpSchema = z.object({
     .regex(/^[a-z0-9_]+$/, {
       message:
         'Username can only contain lowercase letters, numbers, and underscores.',
-    })
-    .transform(sanitize),
+    }),
   password: passwordField,
 });
 
@@ -61,6 +59,7 @@ export type ForgotPasswordPayload = z.infer<typeof forgotPasswordSchema>;
 
 export const resetPasswordSchema = z.object({
   password: passwordField,
+  token: z.string(),
 });
 
 export type ResetPasswordPayload = z.infer<typeof resetPasswordSchema>;

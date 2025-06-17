@@ -1,8 +1,13 @@
 import { initTRPC } from '@trpc/server';
+import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
 
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+export const createTRPCContext = async ({
+  req,
+  res,
+}: CreateNextContextOptions) => {
   return {
-    headers: opts.headers,
+    req,
+    res,
   };
 };
 
